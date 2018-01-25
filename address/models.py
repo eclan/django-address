@@ -290,21 +290,18 @@ class AddressField(models.ForeignKey):
     description = 'An address'
 
     def __init__(self, *args, **kwargs):
-        kwargs['to'] = 'address.Address'
-        super(AddressField, self).__init__(*args, **kwargs)
+        if 'on_delete' in kwargs:
+            on_delete = kwargs.pop('on_delete')
+        else:
+            on_delete = models.CASCADE
+        if 'to' in kwargs:
+            kwargs.pop('to')
+        super(AddressField, self).__init__('address.Address', on_delete, **kwargs)
 
     def contribute_to_class(self, cls, name, virtual_only=False):
         from address.compat import compat_contribute_to_class
-
         compat_contribute_to_class(self, cls, name, virtual_only)
-        # super(ForeignObject, self).contribute_to_class(cls, name, virtual_only=virtual_only)
-
         setattr(cls, self.name, AddressDescriptor(self))
-
-    # def deconstruct(self):
-    #     name, path, args, kwargs = super(AddressField, self).deconstruct()
-    #     del kwargs['to']
-    #     return name, path, args, kwargs
 
     def formfield(self, **kwargs):
         from .forms import AddressField as AddressFormField
